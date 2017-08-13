@@ -1,0 +1,4 @@
+#!/bin/bash
+./unlit --perl unlit.md | tail -n+2 > unlit.new
+mv unlit.new unlit
+chmod +x unlit
