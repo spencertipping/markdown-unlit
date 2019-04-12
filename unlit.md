@@ -3,6 +3,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+use v5.14;
 ```
 
 ## Parser
@@ -13,16 +14,21 @@ each of which is one of the following:
 - `[line_number, "fence_language", "block_text"]`: a description of each fenced
   code block within the markdown
 
+If a document contains multiple links to the same destination, only the first is
+followed.
+
 ```perl
 sub parse($)
 { my @lines   = ('', split /\n/, $_[0]);
   my @toggles = (0, grep $lines[$_] =~ /^\s*\`\`\`/, 1..$#lines);
-  (map((join("\n", @lines[$toggles[$_-2]..$toggles[$_-1]]) =~ /\]\(([^)]+\.md)\)/g,
-        [$toggles[$_-1] + 1,
-         $lines[$toggles[$_-1]] =~ /^\s*\`\`\`(.*)$/,
-         join "\n", @lines[$toggles[$_-1]+1..$toggles[$_]-1]]),
-       grep !($_ & 1), 2..$#toggles),
-   join("\n", @lines[$toggles[-1]..$#lines]) =~ /\]\(([^)]+\.md)\)/g) }
+  my %link_seen;
+  grep ref() || !$link_seen{$_}++,
+  map((join("\n", @lines[$toggles[$_-2]..$toggles[$_-1]]) =~ /\]\(([^)]+\.md)\)/g,
+       [$toggles[$_-1] + 1,
+        $lines[$toggles[$_-1]] =~ /^\s*\`\`\`(.*)$/,
+        join "\n", @lines[$toggles[$_-1]+1..$toggles[$_]-1]]),
+      grep !($_ & 1), 2..$#toggles),
+  join("\n", @lines[$toggles[-1]..$#lines]) =~ /\]\(([^)]+\.md)\)/g }
 ```
 
 ## Compiler

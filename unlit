@@ -1,17 +1,20 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-#line 17 "unlit.md"
+use v5.14;
+#line 21 "unlit.md"
 sub parse($)
 { my @lines   = ('', split /\n/, $_[0]);
   my @toggles = (0, grep $lines[$_] =~ /^\s*\`\`\`/, 1..$#lines);
-  (map((join("\n", @lines[$toggles[$_-2]..$toggles[$_-1]]) =~ /\]\(([^)]+\.md)\)/g,
-        [$toggles[$_-1] + 1,
-         $lines[$toggles[$_-1]] =~ /^\s*\`\`\`(.*)$/,
-         join "\n", @lines[$toggles[$_-1]+1..$toggles[$_]-1]]),
-       grep !($_ & 1), 2..$#toggles),
-   join("\n", @lines[$toggles[-1]..$#lines]) =~ /\]\(([^)]+\.md)\)/g) }
-#line 38 "unlit.md"
+  my %link_seen;
+  grep ref() || !$link_seen{$_}++,
+  map((join("\n", @lines[$toggles[$_-2]..$toggles[$_-1]]) =~ /\]\(([^)]+\.md)\)/g,
+       [$toggles[$_-1] + 1,
+        $lines[$toggles[$_-1]] =~ /^\s*\`\`\`(.*)$/,
+        join "\n", @lines[$toggles[$_-1]+1..$toggles[$_]-1]]),
+      grep !($_ & 1), 2..$#toggles),
+  join("\n", @lines[$toggles[-1]..$#lines]) =~ /\]\(([^)]+\.md)\)/g }
+#line 44 "unlit.md"
 our %languages;
 
 sub compile($);
