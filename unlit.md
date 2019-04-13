@@ -14,15 +14,10 @@ each of which is one of the following:
 - `[line_number, "fence_language", "block_text"]`: a description of each fenced
   code block within the markdown
 
-If a document contains multiple links to the same destination, only the first is
-followed.
-
 ```perl
 sub parse($)
 { my @lines   = ('', split /\n/, $_[0]);
   my @toggles = (0, grep $lines[$_] =~ /^\s*\`\`\`/, 1..$#lines);
-  my %link_seen;
-  grep ref() || !$link_seen{$_}++,
   map((join("\n", @lines[$toggles[$_-2]..$toggles[$_-1]]) =~ /\]\(([^)]+\.md)\)/g,
        [$toggles[$_-1] + 1,
         $lines[$toggles[$_-1]] =~ /^\s*\`\`\`(.*)$/,
@@ -40,13 +35,16 @@ The compiler automatically inserts `#line` directives for Perl; this results in
 the Perl interpreter giving warnings and errors in terms of the original
 Markdown files and line numbers.
 
+The compiler includes each file at most once.
+
 ```perl
 our %languages;
+our %visited_inodes;
 
 sub compile($);
 sub compile($)
 { my ($f) = @_;
-  return () unless -r $f;
+  return () unless -r $f && !$visited_inodes{(stat $f)[1]}++;
   open my $fh, "< $f" or die "open $f: $!";
   map ref() ? $languages{$$_[1]}
               ? $$_[1] =~ /^pl|^perl/ ? "#line $$_[0] \"$f\"\n$$_[2]\n" : $$_[2]
